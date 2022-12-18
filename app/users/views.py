@@ -8,21 +8,26 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def pre_save(self, request):
+        if request.data['password']:
+            request.data['password'] = make_password(request.data['password'])
+        return request
+
     def list(self, request, *args, **kwargs):
         users = self.get_queryset().filter(is_active=True)
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        user = request.data
+        request = self.pre_save(request)
+        return super().create(request, *args, **kwargs)
 
-        if user.get('password'):
-            user['password'] = make_password(user['password'])
+    def partial_update(self, request, *args, **kwargs):
+        request = self.pre_save(request)
+        return super().partial_update(request, *args, **kwargs)
 
-        serializer = self.get_serializer(data=user)
-        serializer.is_valid(raise_exception=True)
+    def update(self, request, *args, **kwargs):
+        if request.method == "PUT":
+            return Response(None, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        self.perform_create(serializer)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return super().update(request, *args, **kwargs)
