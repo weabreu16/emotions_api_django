@@ -3,9 +3,11 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer, AuthSerializer
 from .models import User
+from .authentication import EmotionsJWTAuthentication
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -65,11 +67,13 @@ class AuthViewSet(viewsets.GenericViewSet):
         tokens = self.generate_token(user)
         return Response(tokens, status.HTTP_201_CREATED)
 
-    def create(self, request):
+    def create(self, request: Request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return self.login(serializer.data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['post'])
     def refresh(self, request: Request):
-        """Not implemented!!!!"""
+        serializer = TokenRefreshSerializer()
+        token = serializer.validate(request.data)
+        return Response(token)
