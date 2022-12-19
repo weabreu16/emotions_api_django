@@ -12,6 +12,14 @@ class EmotionsJWTAuthentication(JWTAuthentication):
         super().__init__(*args, **kwargs)
         self.user_model = User
 
+    def authenticate(self, request):
+        result = super().authenticate(request)
+        
+        if not result:
+            raise InvalidToken("Token contained no recognizable user identification")
+
+        return result
+
     def get_user(self, validated_token):
         try:
             user_id = validated_token[api_settings.USER_ID_CLAIM]

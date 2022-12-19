@@ -15,11 +15,19 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    authentication_classes = [EmotionsJWTAuthentication]
 
     def pre_save(self, request):
         if request.data['password']:
             request.data['password'] = make_password(request.data['password'])
         return request
+
+    def perform_authentication(self, request: Request):
+        if request.method == "POST":
+            return
+
+        main_authenticator = self.get_authenticators()[0]
+        main_authenticator.authenticate(request)
 
     def list(self, request, *args, **kwargs):
         users = self.get_queryset().filter(is_active=True)
