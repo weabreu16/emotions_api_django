@@ -1,8 +1,8 @@
-from rest_framework import viewsets
 from .models import Article
 from .serializers import ArticleSerializer, GetArticleSerializer
+from common.viewsets import EagerModelViewSet
 
-class ArticleViewSet(viewsets.ModelViewSet):
+class ArticleViewSet(EagerModelViewSet):
     queryset = Article.objects.all()
     http_method_names = ['get', 'post', 'retrieve', 'patch']
 
