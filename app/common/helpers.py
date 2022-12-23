@@ -23,12 +23,12 @@ def get_param(query_params: QueryDict, param: str, default: T = None, cast: T = 
     value = query_params.get(param, default)
 
     if not value:
-        raise ParseError(f"${param} does not exist")
+        raise ParseError(f"{param} does not exist")
     
     if cast:
         try:
             return cast(value)
         except:
-            raise ParseError(f"Can't cast ${value} (${param}) to ${cast}")
+            raise ParseError(f"Can't cast {value} ('{param}') to {cast}")
     
     return value
