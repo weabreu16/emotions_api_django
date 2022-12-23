@@ -1,13 +1,14 @@
 from django.contrib.auth.hashers import make_password, check_password
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, AuthSerializer
-from .models import User
+from .serializers import AuthSerializer, NoteSerializer, UserSerializer
+from .models import Note, User
 from .authentication import EmotionsJWTAuthentication
+from common.helpers import get_param
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -85,3 +86,27 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = TokenRefreshSerializer()
         token = serializer.validate(request.data)
         return Response(token)
+
+class NoteViewSet(viewsets.GenericViewSet, 
+        mixins.CreateModelMixin, 
+        mixins.UpdateModelMixin
+    ):
+    """
+    View for retrieve, create and update psychologist notes associated with a patient.
+    """
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    http_method_names = ["get", "post", "patch"]
+    
+    def get_note(self, request: Request):
+        query_params = request.query_params
+        psychologist = get_param(query_params, 'psychologist')
+        patient = get_param(query_params, 'patient')
+
+        note = self.get_queryset().filter(psychologist=psychologist, patient=patient).first()
+
+        serializer = self.get_serializer(note)
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        return self.get_note(request)
