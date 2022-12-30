@@ -48,6 +48,10 @@ INSTALLED_APPS = [
     'articles.apps.ArticlesConfig'
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'common.exceptions.handle_exception',
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
