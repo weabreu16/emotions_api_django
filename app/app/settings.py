@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_admin_logs',
     'users.apps.UsersConfig',
-    'articles.apps.ArticlesConfig'
+    'articles.apps.ArticlesConfig',
+    'appointments.apps.AppointmentsConfig'
 ]
 
 REST_FRAMEWORK = {
