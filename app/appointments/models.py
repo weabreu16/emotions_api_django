@@ -2,10 +2,10 @@ from django.db import models
 from users.models import User
 
 class AppointmentStatus(models.TextChoices):
-    SCHEDULED = 'Sc',
-    STARTED = 'St',
-    COMPLETED = 'Co',
-    REFERRED = 'Re'
+    SCHEDULED = 'Scheduled',
+    STARTED = 'Started',
+    COMPLETED = 'Completed',
+    REFERRED = 'Referred'
 
 class Appointment(models.Model):
     description = models.CharField(max_length=255, null=True)
