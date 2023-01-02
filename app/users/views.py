@@ -5,6 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import AuthSerializer, NoteSerializer, UserSerializer
 from .models import Note, User
 from .authentication import EmotionsJWTAuthentication
@@ -17,6 +18,9 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [EmotionsJWTAuthentication]
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active']
 
     def pre_save(self, request):
         if request.data['password']:
@@ -30,11 +34,6 @@ class UserViewSet(viewsets.ModelViewSet):
         main_authenticator = self.get_authenticators()[0]
         main_authenticator.authenticate(request)
 
-    def list(self, request, *args, **kwargs):
-        users = self.get_queryset().filter(is_active=True)
-        serializer = self.get_serializer(users, many=True)
-        return Response(serializer.data)
-
     def create(self, request, *args, **kwargs):
         request = self.pre_save(request)
         return super().create(request, *args, **kwargs)
@@ -42,12 +41,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         request = self.pre_save(request)
         return super().partial_update(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == "PUT":
-            return Response(None, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-        return super().update(request, *args, **kwargs)
 
 class AuthViewSet(viewsets.GenericViewSet):
     """
