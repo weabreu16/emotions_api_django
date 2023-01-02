@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_admin_logs',
+    'django_filters',
     'users.apps.UsersConfig',
     'articles.apps.ArticlesConfig',
     'appointments.apps.AppointmentsConfig',
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'common.exceptions.handle_exception',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 MIDDLEWARE = [
