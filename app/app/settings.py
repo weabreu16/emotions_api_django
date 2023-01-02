@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'django_admin_logs',
     'users.apps.UsersConfig',
     'articles.apps.ArticlesConfig',
-    'appointments.apps.AppointmentsConfig'
+    'appointments.apps.AppointmentsConfig',
+    'cities.apps.CitiesConfig'
 ]
 
 REST_FRAMEWORK = {
