@@ -1,19 +1,27 @@
+from typing import List, Dict
+
 from django.utils.timezone import datetime
 from django.db.models import Q, QuerySet
 from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
+
 from common.viewsets import EagerModelViewSet
 from common.helpers import get_param
 from .models import Appointment
 from .serializers import GetAppointmentSerializer, AppointmentSerializer
 
+AppointmentHistory = Dict[str, List[Dict]]
+
 class AppointmentViewSet(EagerModelViewSet):
     queryset = Appointment.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
-        if hasattr(self, 'action') and self.action in ['list', 'retrieve']:
+        if hasattr(self, 'action') and self.action in ['list', 'retrieve', 'history']:
             return GetAppointmentSerializer
         return AppointmentSerializer
 
@@ -75,3 +83,45 @@ class AppointmentViewSet(EagerModelViewSet):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+    @action(methods=["get"], detail=False)
+    def history(self, request: Request, *args, **kwargs):
+        userId: str = get_param(request.query_params, "userId")
+
+        queryset = self.get_queryset() \
+            .filter(
+                Q(psychologist=userId) | Q(patient=userId),
+                status="Completed",
+                is_active=True
+            ) \
+            .order_by("-start")
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            history = self.create_history(serializer.data)
+            return self.get_paginated_response(history)
+
+        serializer = self.get_serializer(queryset, many=True)
+        history = self.create_history(serializer.data)
+        return Response(history)
+
+    def create_history(self, appointments: List[Dict]) -> List[AppointmentHistory]:
+        
+        appointment_histories = []
+
+        appointment_history_by_date: AppointmentHistory = dict()
+
+        for appointment in appointments:
+            date: datetime = datetime.fromisoformat(appointment["start"])
+            formatted_date = f"{date.year}-{date.month}-{date.day}"
+
+            if appointment_history_by_date.get(formatted_date):
+                appointment_history_by_date[formatted_date].append(appointment)
+            else:
+                appointment_history_by_date[formatted_date] = [appointment]
+
+        for key, val in appointment_history_by_date.items():
+            appointment_histories.append({"date": key, "appointments": val})
+
+        return appointment_histories
